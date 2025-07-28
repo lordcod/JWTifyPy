@@ -32,3 +32,19 @@ def derive_public_key_from_private(private_key_pem: str) -> Optional[str]:
         )
         return public_pem.decode()
     return None
+
+
+class _MissingType:
+    __slots__ = ()
+
+    def __bool__(self):
+        return False
+
+    def __repr__(self):
+        return "<MISSING>"
+
+    def __str__(self):
+        return "MISSING"
+
+
+MISSING = _MissingType()

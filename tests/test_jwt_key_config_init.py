@@ -43,8 +43,8 @@ def test_jwt_key_config_init():
             "leeway": 1.0,
             "options": {
                 "verify_sub": False,
-                "verify_aud": False,
-                "verify_iss": False,
+                "verify_aud": True,
+                "verify_iss": True,
             },
             "keys": {
                 "rsa_key": {
@@ -52,7 +52,7 @@ def test_jwt_key_config_init():
                     "private_key": f"file:{priv_file.name}",
                     "public_key": f"file:{pub_file.name}"
                 },
-                "symmetric_key": {
+                "default": {
                     "algorithm": "HS256",
                     "secret": "my-secret-string"
                 }
@@ -64,7 +64,7 @@ def test_jwt_key_config_init():
 
         # Проверка
         rsa_key = JWTStore.get_key("rsa_key")
-        symmetric_key = JWTStore.get_key("symmetric_key")
+        symmetric_key = JWTStore.get_key("default")
 
         assert rsa_key.algorithm == "RS256"
         assert rsa_key.private_key.strip().startswith("-----BEGIN PRIVATE KEY-----")
@@ -75,14 +75,17 @@ def test_jwt_key_config_init():
 
         print()
 
-        token = JWTManager('rsa_key').create_access_token(
-            1, fresh=True, issuer="test")
+        token = JWTManager.using('rsa_key').with_issuer("test").with_audience("site").create_access_token(
+            1,
+            fresh=True,
+        )
         print(f"Токен (rsa): {token}")
 
-        payload = JWTManager('rsa_key').decode_token(token)
+        payload = JWTManager.using('rsa_key').with_issuer(
+            "test").with_audience("bot", ["site", "bot"]).decode_token(token)
         assert payload['sub'] == 1
 
-        token = JWTManager('symmetric_key').create_access_token(2)
+        token = JWTManager.create_access_token(2)
         print(f"Токен (symmetric): {token}")
 
     os.remove(priv_file.name)

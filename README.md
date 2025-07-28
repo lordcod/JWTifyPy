@@ -51,19 +51,102 @@ JWTConfig.init(config={
 })
 ```
 
-### 🪪 Создание токена
+### 🔹 Базовые примеры
 
 ```python
 from jwtifypy import JWTManager
 
-# 📥 Токен по умолчанию
-token = JWTManager().create_access_token("user123")
+# 📥 Токен по умолчанию (используется ключ "default")
+token = JWTManager.create_access_token("user123")
 print(token)
 # 👉 eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
 # 🔑 Токен с именованным ключом
-admin_token = JWTManager("admin").create_access_token("admin42")
+admin_token = JWTManager.using("admin").create_access_token("admin42")
 print(admin_token)
+# 👉 eyJhbGciOiJSUzI1NiIsInR5cCI6...
+```
+
+---
+
+### 📛 Добавление issuer (iss)
+
+```python
+# 🧾 Токен с указанием issuer
+token_with_issuer = (
+    JWTManager.using("admin")
+    .with_issuer("my-service")
+    .create_access_token("issuer-user")
+)
+print(token_with_issuer)
+```
+
+---
+
+### 🎯 Добавление audience (aud)
+
+```python
+# 🎯 Одиночная аудитория
+token_with_aud = (
+    JWTManager.using("admin")
+    .with_audience("client-app")
+    .create_access_token("aud-user")
+)
+print(token_with_aud)
+
+# 📦 Множественная аудитория (для проверки)
+token_with_multiple_aud = (
+    JWTManager.using("admin")
+    .with_audience(
+        audience_for_encoding="web",
+        audience_for_decoding=["web", "mobile"]
+    )
+    .create_access_token("multi-aud-user")
+)
+print(token_with_multiple_aud)
+```
+
+---
+
+### 🤖 Удобное переиспользование менеджера
+
+```python
+# 🤖 Создание отдельного менеджера с выбранным ключом
+JWTAdmin = JWTManager.using("admin")
+
+# 🎯 Audience
+token_with_aud = (
+    JWTAdmin
+    .with_audience("client-app")
+    .create_access_token("aud-user")
+)
+print(token_with_aud)
+
+# 🔗 Issuer + Audience вместе
+token_full = (
+    JWTAdmin
+    .with_issuer("auth-server")
+    .with_audience("bot")
+    .create_access_token("full-user")
+)
+print(token_full)
+```
+
+---
+
+### 🔍 Верификация токена с `iss` и `aud`
+
+```python
+payload = (
+    JWTManager.using("admin")
+    .with_issuer("auth-server")
+    .with_audience("bot")
+    .decode_token(token_full)
+)
+
+print(payload["sub"])  # 👉 full-user
+print(payload["aud"])  # 👉 web
+print(payload["iss"])  # 👉 auth-server
 ```
 
 ---
@@ -111,21 +194,10 @@ JWTConfig.init(config={
 
     # ⚙️ Дополнительные опции валидации (соответствуют PyJWT)
     "options": {
-        "verify_sub": False  # Не проверять наличие claim "sub"
+        "verify_sub": False,  # Не проверять наличие claim "sub"
+        "strict_aud": False   # Для мягкой проверки audience
     }
 })
-```
-
----
-
-## 🔎 Верификация токена
-
-```python
-from jwtifypy import JWTManager
-
-token = JWTManager.create_access_token("user123")
-payload = JWTManager.decode_token(token)
-print(payload["sub"])  # 👉 user123
 ```
 
 ---

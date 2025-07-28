@@ -1,29 +1,89 @@
-from datetime import datetime, timedelta, timezone
-import uuid
-import jwt
-from typing import Optional, Union, Dict, Any
+from datetime import datetime, timedelta
+from typing import Iterable, Optional, Sequence, Union, Dict, Any
 
-from jwtifypy.store import JWTStore
+from jwtifypy.query import JWTQuery
+from jwtifypy.utils import MISSING
 
 
 class JWTManager:
     """
-    Менеджер JWT токенов для создания и декодирования JWT с поддержкой разных ключей.
+    Менеджер для работы с JWT, предоставляющий удобные классовые методы
+    для создания, декодирования токенов и выбора ключа.
+
+    Внутри использует класс JWTQuery для выполнения операций.
     """
 
-    def __init__(self, key: Optional[str] = None):
+    @classmethod
+    def _query_manager(cls) -> JWTQuery:
         """
-        Инициализация менеджера с указанным ключом.
+        Получить новый экземпляр JWTQuery для выполнения операций.
+
+        Returns:
+            JWTQuery: Новый объект для работы с JWT.
+        """
+        return JWTQuery()
+
+    @classmethod
+    def using(cls, key: Optional[str] = None) -> JWTQuery:
+        """
+        Выбрать ключ по имени для последующих операций.
 
         Args:
-            key (Optional[str]): Имя ключа для подписи JWT. Если не указан, используется 'default'.
-        """
-        if key is None:
-            key = 'default'
-        self.key = JWTStore.get_key(key)
+            key (Optional[str]): Имя ключа из хранилища JWTStore.
+                Если None — используется ключ 'default'.
 
+        Returns:
+            JWTQuery: Объект JWTQuery, связанный с выбранным ключом.
+        """
+        return cls._query_manager().using(key)
+
+    @classmethod
+    def with_issuer(
+        cls,
+        issuer_for_encoding: str = MISSING,
+        issuer_for_decoding: Optional[Union[str, Sequence[str]]] = MISSING,
+    ) -> JWTQuery:
+        """
+        Установить издателя (issuer) для кодирования и декодирования токенов.
+
+        Args:
+            issuer_for_encoding (str): Значение issuer при создании токена.
+            issuer_for_decoding (Optional[Union[str, Sequence[str]]]): Значение issuer при проверке токена.
+                Если None — используется значение для кодирования.
+
+        Returns:
+            JWTQuery: Объект JWTQuery с установленным issuer.
+        """
+        return cls._query_manager().with_issuer(
+            issuer_for_encoding=issuer_for_encoding,
+            issuer_for_decoding=issuer_for_decoding,
+        )
+
+    @classmethod
+    def with_audience(
+        cls,
+        audience_for_encoding: Optional[str] = MISSING,
+        audience_for_decoding: Optional[Union[str, Iterable[str]]] = MISSING,
+    ) -> JWTQuery:
+        """
+        Установить аудиторию (audience) для кодирования и декодирования токенов.
+
+        Args:
+            audience_for_encoding (Optional[str]): Значение audience при создании токена.
+            audience_for_decoding (Optional[Union[str, Iterable[str]]]): Значение audience при проверке токена.
+                Если None — используется значение для кодирования.
+
+        Returns:
+            JWTQuery: Объект JWTQuery с установленным audience.
+        """
+        return cls._query_manager().with_audience(
+            audience_for_encoding=audience_for_encoding,
+            audience_for_decoding=audience_for_decoding,
+        )
+
+    @classmethod
     def create_token(
-        self,
+        cls,
         subject: Union[str, int],
         token_type: str,
         expires_delta: Optional[Union[timedelta, int]] = None,
@@ -39,97 +99,27 @@ class JWTManager:
             subject (Union[str, int]): Субъект токена (например, идентификатор пользователя).
             token_type (str): Тип токена ('access', 'refresh' и т.п.).
             expires_delta (Optional[Union[timedelta, int]]): Время жизни токена (timedelta или количество секунд).
-            fresh (Optional[bool]): Является ли токен "свежим".
+            fresh (Optional[bool]): Флаг "свежести" токена.
             issuer (Optional[str]): Издатель токена.
             audience (Optional[str]): Аудитория токена.
-            additional_claims (Optional[Dict[str, Any]]): Дополнительные пользовательские поля в payload.
+            **user_claims: Дополнительные пользовательские поля для payload.
 
         Returns:
             str: Закодированный JWT токен.
         """
-        now = datetime.now(tz=timezone.utc)
-        jwt_id = str(uuid.uuid4())
-
-        payload = {
-            "type": token_type,
-            "sub": subject,
-            "jti": jwt_id,
-            "iat": now,
-            "nbf": now,
-        }
-
-        if expires_delta is not None:
-            if isinstance(expires_delta, int):
-                expires_delta = timedelta(seconds=expires_delta)
-            payload["exp"] = now + expires_delta
-
-        if fresh is not None:
-            payload["fresh"] = fresh
-
-        if issuer is not None:
-            payload["iss"] = issuer
-
-        if audience is not None:
-            payload["aud"] = audience
-
-        if user_claims:
-            payload.update(user_claims)
-
-        token = jwt.encode(
-            payload,
-            self.key.get_private_key(),
-            algorithm=self.key.algorithm
-        )
-        return token
-
-    def decode_token(
-        self,
-        token: str,
-        options: Optional[Dict[str, Any]] = None,
-        audience: Optional[str] = None,
-        issuer: Optional[str] = None,
-        leeway: Union[float, timedelta] = 0,
-    ) -> Dict[str, Any]:
-        """
-        Декодировать и проверить JWT токен.
-
-        Args:
-            token (str): JWT токен для декодирования.
-            verify_exp (bool): Проверять ли срок годности токена (exp).
-            audience (Optional[str]): Ожидаемая аудитория токена.
-            issuer (Optional[str]): Ожидаемый издатель токена.
-
-        Returns:
-            Dict[str, Any]: Расшифрованный payload токена.
-
-        Raises:
-            jwt.ExpiredSignatureError: Если срок действия токена истёк.
-            jwt.InvalidTokenError: Если токен недействителен по другим причинам.
-        """
-        base_options = JWTStore.get_options()
-        if base_options and options:
-            base_options.update(options)
-        elif options and not base_options:
-            base_options = options
-
-        base_leeway = JWTStore.get_leeway()
-        if leeway != 0:
-            base_leeway = leeway
-        elif base_leeway is None:
-            base_leeway = 0
-
-        return jwt.decode(
-            token,
-            self.key.get_public_key(),
-            algorithms=[self.key.algorithm],
-            audience=audience,
+        return cls._query_manager().create_token(
+            subject=subject,
+            token_type=token_type,
+            expires_delta=expires_delta,
+            fresh=fresh,
             issuer=issuer,
-            options=base_options,
-            leeway=base_leeway
+            audience=audience,
+            **user_claims
         )
 
+    @classmethod
     def create_access_token(
-        self,
+        cls,
         subject: Union[str, int],
         expires_delta: Optional[timedelta] = timedelta(minutes=15),
         fresh: bool = False,
@@ -141,24 +131,25 @@ class JWTManager:
 
         Args:
             subject (Union[str, int]): Субъект токена.
-            expires_delta (Optional[timedelta]): Время жизни токена. По умолчанию 15 минут.
-            fresh (bool): Флаг свежести токена.
+            expires_delta (Optional[timedelta]): Время жизни токена, по умолчанию 15 минут.
+            fresh (bool): Флаг "свежести" токена.
             issuer (Optional[str]): Издатель токена.
             audience (Optional[str]): Аудитория токена.
+
         Returns:
             str: Access JWT токен.
         """
-        return self.create_token(
+        return cls._query_manager().create_access_token(
             subject=subject,
-            token_type="access",
             expires_delta=expires_delta,
             fresh=fresh,
             issuer=issuer,
             audience=audience
         )
 
+    @classmethod
     def create_refresh_token(
-        self,
+        cls,
         subject: Union[str, int],
         expires_delta: Optional[timedelta] = timedelta(days=31),
         issuer: Optional[str] = None,
@@ -169,17 +160,50 @@ class JWTManager:
 
         Args:
             subject (Union[str, int]): Субъект токена.
-            expires_delta (Optional[timedelta]): Время жизни токена. По умолчанию 31 день.
+            expires_delta (Optional[timedelta]): Время жизни токена, по умолчанию 31 день.
             issuer (Optional[str]): Издатель токена.
             audience (Optional[str]): Аудитория токена.
 
         Returns:
             str: Refresh JWT токен.
         """
-        return self.create_token(
+        return cls._query_manager().create_refresh_token(
             subject=subject,
-            token_type="refresh",
             expires_delta=expires_delta,
             issuer=issuer,
             audience=audience
+        )
+
+    @classmethod
+    def decode_token(
+        cls,
+        token: str,
+        options: Optional[Dict[str, Any]] = None,
+        audience: Optional[Union[str, Iterable[str]]] = None,
+        issuer: Optional[Union[str, Sequence[str]]] = None,
+        leeway: Union[float, timedelta] = 0,
+    ) -> Dict[str, Any]:
+        """
+        Декодировать и проверить JWT токен.
+
+        Args:
+            token (str): JWT токен для декодирования.
+            options (Optional[Dict[str, Any]]): Опции декодирования PyJWT.
+            audience (Optional[Union[str, Iterable[str]]]): Ожидаемая аудитория токена.
+            issuer (Optional[Union[str, Sequence[str]]]): Ожидаемый издатель токена.
+            leeway (Union[float, timedelta]): Допустимое смещение времени при проверке срока действия.
+
+        Returns:
+            Dict[str, Any]: Расшифрованный payload токена.
+
+        Raises:
+            jwt.ExpiredSignatureError: Если срок действия токена истек.
+            jwt.InvalidTokenError: Если токен недействителен по другим причинам.
+        """
+        return cls._query_manager().decode_token(
+            token=token,
+            options=options,
+            audience=audience,
+            issuer=issuer,
+            leeway=leeway
         )
