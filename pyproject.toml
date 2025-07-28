@@ -1,9 +1,26 @@
 [tool.poetry]
 name = "jwtifypy"
-version = "0.1.0"
-description = ""
+version = "0.0.0"
+description = "Lightweight and extensible Python library for generating and verifying JWT tokens with multiple algorithms (HS256, ES256, RS256, etc.). Built on PyJWT, it provides an intuitive interface, flexible configuration, and secure key storage."
 authors = ["LordCode <9999269010dddd@gmail.com>"]
+license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/lordcod/jwtifypy"
+repository = "https://github.com/lordcod/jwtifypy"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+]
+
+packages = [
+    { include = "jwtifypy" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"

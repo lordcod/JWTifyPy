@@ -4,7 +4,7 @@
 name = "cffi"
 version = "1.17.1"
 description = "Foreign Function Interface for Python calling C code."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "cffi-1.17.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:df8b1c11f177bc2313ec4b2d46baec87a5f3e71fc8b45dab2ee7cae86d9aba14"},
@@ -94,7 +94,7 @@ files = [
 name = "cryptography"
 version = "45.0.5"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
-optional = false
+optional = true
 python-versions = "!=3.9.0,!=3.9.1,>=3.7"
 files = [
     {file = "cryptography-45.0.5-cp311-abi3-macosx_10_9_universal2.whl", hash = "sha256:101ee65078f6dd3e5a028d4f19c07ffa4dd22cce6a20eaa160f8b5219911e7d8"},
@@ -190,7 +190,7 @@ testing = ["coverage", "pytest", "pytest-benchmark"]
 name = "pycparser"
 version = "2.22"
 description = "C parser in Python"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
@@ -253,7 +253,7 @@ dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "requests
 name = "python-dotenv"
 version = "1.1.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
-optional = false
+optional = true
 python-versions = ">=3.9"
 files = [
     {file = "python_dotenv-1.1.1-py3-none-any.whl", hash = "sha256:31f23644fe2602f88ff55e1f5c79ba497e01224ee7737937930c448e4d0e24dc"},
@@ -263,7 +263,12 @@ files = [
 [package.extras]
 cli = ["click (>=5.0)"]
 
+[extras]
+crypto = ["cryptography"]
+env = ["python-dotenv"]
+full = ["cryptography", "python-dotenv"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "8173e5962a2b338ede75dc44da24fe5a7b18b45e9f50e9a73a46d8da2fd90a8c"
+content-hash = "d8bab1e424d2f9002ecad747b8acf9a366882550e782e0148f36f61dd65ed310"
