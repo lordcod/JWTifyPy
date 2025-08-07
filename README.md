@@ -1,44 +1,47 @@
 # 🔐 JWTifyPy
 
-**JWTifyPy** — это легковесная и расширяемая Python-библиотека для генерации и проверки JWT-токенов с поддержкой различных алгоритмов (`HS256`, `ES256`, `RS256` и др.).  
-Библиотека построена поверх [PyJWT](https://pyjwt.readthedocs.io/) и предоставляет интуитивный интерфейс, удобную конфигурацию и безопасное хранилище ключей — всё, что нужно для работы с JWT.
+**JWTifyPy** is a lightweight and extensible Python library for generating and verifying JWT tokens, with support for various algorithms like `HS256`, `ES256`, `RS256`, and more.
+Built on top of [PyJWT](https://pyjwt.readthedocs.io/), it offers an intuitive interface, easy configuration, and secure key storage — everything you need to work with JWTs.
 
 ---
 
-## 📦 Установка
+## 📦 Installation
 
 ```bash
 pip install jwtifypy
-````
+```
 
-## ⚙️ Опциональные зависимости
+---
 
-Для работы с переменными окружения (`.env`) и криптографическими алгоритмами (`ES256`) используются дополнительные пакеты: `python-dotenv` и `cryptography`.
-Они подключаются как опциональные зависимости и **не устанавливаются по умолчанию**.
+## ⚙️ Optional Dependencies
 
-Чтобы установить библиотеку с нужными дополнительными пакетами, используйте extras:
+To support environment variables (`.env`) and advanced cryptographic algorithms (`ES256`), you may install optional packages like `python-dotenv` and `cryptography`.
 
-* С поддержкой переменных окружения (dotenv):
+Use extras to include these:
+
+* With dotenv support:
 
 ```bash
 pip install jwtifypy[env]
 ```
 
-* С поддержкой криптографии:
+* With cryptography support:
 
 ```bash
 pip install jwtifypy[crypto]
 ```
 
-* Полный набор дополнительных возможностей:
+* Full feature set:
 
 ```bash
 pip install jwtifypy[full]
 ```
 
-## 🚀 Быстрый старт
+---
 
-### 🔧 Инициализация
+## 🚀 Quick Start
+
+### 🔧 Initialization
 
 ```python
 from jwtifypy import JWTConfig
@@ -51,17 +54,19 @@ JWTConfig.init(config={
 })
 ```
 
-### 🔹 Базовые примеры
+---
+
+### 🔹 Basic Examples
 
 ```python
 from jwtifypy import JWTManager
 
-# 📥 Токен по умолчанию (используется ключ "default")
+# 📥 Default token using the "default" key
 token = JWTManager.create_access_token("user123")
 print(token)
 # 👉 eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
-# 🔑 Токен с именованным ключом
+# 🔑 Token using a named key
 admin_token = JWTManager.using("admin").create_access_token("admin42")
 print(admin_token)
 # 👉 eyJhbGciOiJSUzI1NiIsInR5cCI6...
@@ -69,10 +74,9 @@ print(admin_token)
 
 ---
 
-### 📛 Добавление issuer (iss)
+### 📛 Add an Issuer (`iss`)
 
 ```python
-# 🧾 Токен с указанием issuer
 token_with_issuer = (
     JWTManager.using("admin")
     .with_issuer("my-service")
@@ -83,10 +87,10 @@ print(token_with_issuer)
 
 ---
 
-### 🎯 Добавление audience (aud)
+### 🎯 Add an Audience (`aud`)
 
 ```python
-# 🎯 Одиночная аудитория
+# 🎯 Single audience
 token_with_aud = (
     JWTManager.using("admin")
     .with_audience("client-app")
@@ -94,7 +98,7 @@ token_with_aud = (
 )
 print(token_with_aud)
 
-# 📦 Множественная аудитория (для проверки)
+# 📦 Multiple audiences (for decoding)
 token_with_multiple_aud = (
     JWTManager.using("admin")
     .with_audience(
@@ -108,10 +112,10 @@ print(token_with_multiple_aud)
 
 ---
 
-### 🤖 Удобное переиспользование менеджера
+### 🤖 Reuse Manager Conveniently
 
 ```python
-# 🤖 Создание отдельного менеджера с выбранным ключом
+# 🤖 Create a separate manager using the "admin" key
 JWTAdmin = JWTManager.using("admin")
 
 # 🎯 Audience
@@ -122,7 +126,7 @@ token_with_aud = (
 )
 print(token_with_aud)
 
-# 🔗 Issuer + Audience вместе
+# 🔗 Issuer + Audience together
 token_full = (
     JWTAdmin
     .with_issuer("auth-server")
@@ -134,7 +138,7 @@ print(token_full)
 
 ---
 
-### 🔍 Верификация токена с `iss` и `aud`
+### 🔍 Token Verification with `iss` and `aud`
 
 ```python
 payload = (
@@ -151,73 +155,73 @@ print(payload["iss"])  # 👉 auth-server
 
 ---
 
-## ⚙️ Основные возможности
+## ⚙️ Key Features
 
-* ✅ Поддержка алгоритмов `HS256`, `ES256`, `RS256`, и др.
-* 🔐 Хранилище ключей по именам (`default`, `admin`, `service-X`…)
-* 📤 Простой интерфейс создания/декодирования JWT
-* 🛠 Расширяемая архитектура для нестандартных сценариев
-* ⏱ Поддержка стандартных claim'ов: `sub`, `exp`, `iat`, `aud`, и др.
+* ✅ Supports `HS256`, `ES256`, `RS256`, and more
+* 🔐 Named key store (`default`, `admin`, `service-X`, etc.)
+* 📤 Simple JWT creation/decoding interface
+* 🛠 Extensible for advanced scenarios
+* ⏱ Supports standard claims: `sub`, `exp`, `iat`, `aud`, `iss`, etc.
 
 ---
 
-## 🧩 Кастомная конфигурация
+## 🧩 Custom Configuration
 
 ```python
 from jwtifypy import JWTConfig
 
 JWTConfig.init(config={
     "keys": {
-        # 🔑 Симметричный ключ (HS256) — используется общий секрет
+        # 🔑 Symmetric key (HS256) using a shared secret
         "default": {
             "alg": "HS256",
             "secret": "secret"
         },
 
-        # 🔐 Асимметричный ключ (RS256) — RSA, ключи читаются из файлов
+        # 🔐 Asymmetric key (RS256) using RSA keys from files
         "admin": {
             "algorithm": "RS256",
             "private_key": "file:/path/to/private.pem",
             "public_key": "file:/path/to/public.pem"
         },
 
-        # 🧬 Асимметричный ключ (ES256) — ECDSA, приватный ключ из переменной окружения
-        # public_key будет автоматически сгенерирован, если установлена библиотека `cryptography`
+        # 🧬 Asymmetric key (ES256) using ECDSA, private key from env
+        # public_key will be auto-generated if `cryptography` is installed
         "service": {
             "alg": "ES256",
             "private_key": "env:PRIVATE_KEY"
         }
     },
 
-    # ⏱ Leeway в секундах — допускаемая погрешность в проверке времени (exp, iat)
+    # ⏱ Leeway in seconds for time validation (exp, iat)
     "leeway": 1.0,
 
-    # ⚙️ Дополнительные опции валидации (соответствуют PyJWT)
+    # ⚙️ Additional validation options (as in PyJWT)
     "options": {
-        "verify_sub": False,  # Не проверять наличие claim "sub"
-        "strict_aud": False   # Для мягкой проверки audience
+        "verify_sub": False,
+        "strict_aud": False
     }
 })
 ```
 
 ---
 
-## 🗂️ Структура проекта
+## 🗂️ Project Structure
 
 ```
 jwtifypy/
-├── __init__.py          # Основной интерфейс библиотеки
-├── manager.py           # Класс JWTManager
-├── config.py            # Конфигурация и инициализация
-├── key.py               # Обработка ключей (HS/RS/ES)
-├── store.py             # Хранилище JWTKeyStore
-├── exceptions.py        # Кастомные исключения
-└── utils.py             # Вспомогательные утилиты
+├── __init__.py       # Public interface
+├── manager.py        # JWTManager class
+├── config.py         # Config and initialization
+├── key.py            # Key parsing/handling (HS/RS/ES)
+├── store.py          # JWTKeyStore
+├── exceptions.py     # Custom exceptions
+└── utils.py          # Utilities
 ```
 
 ---
 
-## 🧪 Тестирование
+## 🧪 Running Tests
 
 ```bash
 pytest tests/
@@ -225,16 +229,16 @@ pytest tests/
 
 ---
 
-## 🛡️ Рекомендации по безопасности
+## 🛡️ Security Recommendations
 
-* ❗ **Не храните секреты в коде.** Используйте переменные окружения.
-* 🔐 Используйте `RS256`/`ES256` для межсервисной авторизации.
-* ⏳ Устанавливайте короткое время жизни токенов (`exp`).
-* 🔎 Включайте и проверяйте claims, если безопасность важна (`iss`, `aud`, `sub`).
+* ❗ **Never hardcode secrets.** Use environment variables.
+* 🔐 Prefer `RS256`/`ES256` for service-to-service authentication.
+* ⏳ Set short token expiration (`exp`).
+* 🔎 Use and validate claims (`iss`, `aud`, `sub`) when security matters.
 
 ---
 
-## 📜 Лицензия
+## 📜 License
 
 MIT © 2025
 Created by \[LordCode Projects] / \[Dybfuo Projects]
