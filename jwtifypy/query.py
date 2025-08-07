@@ -228,6 +228,7 @@ class JWTQuery:
         fresh: bool = False,
         audience: Optional[Union[str, Iterable[str]]] = None,
         issuer: Optional[Union[str, Sequence[str]]] = None,
+        **user_claims: Any
     ) -> str:
         """
         Создает access JWT токен с дефолтным временем жизни 15 минут.
@@ -248,7 +249,8 @@ class JWTQuery:
             expires_delta=expires_delta,
             fresh=fresh,
             issuer=issuer,
-            audience=audience
+            audience=audience,
+            **user_claims
         )
 
     def create_refresh_token(
@@ -257,6 +259,7 @@ class JWTQuery:
         expires_delta: Optional[timedelta] = timedelta(days=31),
         audience: Optional[Union[str, Iterable[str]]] = None,
         issuer: Optional[Union[str, Sequence[str]]] = None,
+        **user_claims: Any
     ) -> str:
         """
         Создает refresh JWT токен с дефолтным временем жизни 31 день.
@@ -275,5 +278,6 @@ class JWTQuery:
             token_type="refresh",
             expires_delta=expires_delta,
             issuer=issuer,
-            audience=audience
+            audience=audience,
+            **user_claims
         )
